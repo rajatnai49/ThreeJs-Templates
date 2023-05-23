@@ -7,23 +7,23 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 //just assume scene as a movie-scene where you need all material, camera, lights
 //creating scene with threejs
 const scene = new THREE.Scene();
-const count = 1000;
-const particles = [];
-for (let i = 0; i < count; i++) {
-  const time = Math.random() * 100;
-  const factor = Math.random() * 100 + 20;
-  const speed = (Math.random() * 0.015 + 0.01) / 2;
-  const x = Math.random() * 100 - 50;
-  const y = Math.random() * 100 - 50;
-  const z = Math.random() * 100 - 50;
-  particles.push({ time, factor, speed, x, y, z });
+//define shape of the module
+{
+  const geometry = new THREE.SphereGeometry(6, 64, 64);
+  const material = new THREE.PointsMaterial({
+    size: 0.2, // in world units
+  });
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
 }
-
-// Create the mesh and add it to the scene
-const geometry = new THREE.DodecahedronGeometry(0.2);
-const material = new THREE.MeshPhongMaterial({ color: "#050505" });
-const mesh = new THREE.InstancedMesh(geometry, material, count);
-scene.add(mesh);
+{
+  const geometry = new THREE.SphereGeometry(3, 32, 32);
+  const material = new THREE.PointsMaterial({
+    size: 0.1, // in world units
+  });
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+}
 
 const sizes = {
   width: window.innerWidth,
@@ -36,7 +36,7 @@ light.position.set(0, 10, 10);
 scene.add(light);
 
 const camera = new THREE.PerspectiveCamera(
-  75,
+  45,
   sizes.width / sizes.height,
   0.1,
   100
@@ -59,9 +59,47 @@ window.addEventListener("resize", () => {
   renderer.setSize(sizes.width, sizes.height);
 });
 
+const controls = new OrbitControls(camera, canvas);
+controls.autoRotate = true;
+controls.autoRotateSpeed = 5;
+
 // continuously update scene
 const loop = () => {
+  controls.update();
   renderer.render(scene, camera);
   window.requestAnimationFrame(loop);
 };
 loop();
+
+// gsap animation
+const tl = gsap.timeline({ defaults: { duration: 1 } });
+tl.fromTo(points.scale, { z: 0, x: 0, y: 0 }, { z: 1, x: 1, y: 1 });
+tl.fromTo(".title", { opacity: 0 }, { opacity: 1 });
+
+let mouseDown = false;
+let rgb = [];
+window.addEventListener("mousedown", () => {
+  mouseDown = true;
+});
+window.addEventListener("mouseup", () => {
+  mouseDown = false;
+});
+
+// change color animation
+window.addEventListener("mousemove", (e) => {
+  if (mouseDown) {
+    rgb = [
+      Math.round((e.pageX / sizes.width) * 255),
+      Math.round((e.pageY / sizes.height) * 255),
+      150,
+    ];
+
+    //making new color object
+    let newColor = new THREE.Color(`rgb(${rgb.join(",")})`);
+    gsap.to(points.material.color, {
+      r: newColor.r,
+      g: newColor.g,
+      b: newColor.b,
+    });
+  }
+});
