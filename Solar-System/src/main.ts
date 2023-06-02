@@ -4,69 +4,60 @@ import { gsap } from "gsap";
 import "./style.css";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
-//just assume scene as a movie-scene where you need all material, camera, lights
-//creating scene with threejs
-const scene = new THREE.Scene();
-{
-  //define shape of the module
-  const geometry = new THREE.SphereGeometry(0.2, 64, 64);
-  const material = new THREE.MeshStandardMaterial({
-    roughness: 0.5,
-  });
-
-  //mesh is a combination of shape(geometry) and material
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(0, 0, 0);
-  scene.add(mesh);
-}
-
-{
-  //define shape of the module
-  const geometry = new THREE.SphereGeometry(0.3, 64, 64);
-  const material = new THREE.MeshStandardMaterial({
-    roughness: 0.5,
-  });
-
-  //mesh is a combination of shape(geometry) and material
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(4, 0, 0);
-  scene.add(mesh);
-}
-
-{
-  //define shape of the module
-  const geometry = new THREE.SphereGeometry(0.5, 64, 64);
-  const material = new THREE.MeshStandardMaterial({
-    roughness: 0.5,
-  });
-
-  //mesh is a combination of shape(geometry) and material
-  const mesh = new THREE.Mesh(geometry, material);
-
-  mesh.position.set(8, 0, 0);
-  scene.add(mesh);
-}
-
-{
-  //define shape of the module
-  const geometry = new THREE.SphereGeometry(0.4, 64, 64);
-  const material = new THREE.MeshStandardMaterial({
-    roughness: 0.5,
-  });
-
-  //mesh is a combination of shape(geometry) and material
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(10, 0, 0);
-  scene.add(mesh);
-}
-
 const sizes = {
   width: window.innerWidth,
   height: window.innerHeight,
 };
+const scene = new THREE.Scene();
+
+const objects = [];
+const solarSystem = new THREE.Object3D();
+scene.add(solarSystem);
+objects.push(solarSystem);
+
+const radius = 1;
+const widthSegments = 32;
+const heightSegments = 32;
+
+const sphereGeometry = new THREE.SphereGeometry(
+  radius,
+  widthSegments,
+  heightSegments
+);
+
+const sunMaterial = new THREE.MeshPhongMaterial({ emissive: 0xffff00 });
+const sunMesh = new THREE.Mesh(sphereGeometry, sunMaterial);
+sunMesh.scale.set(5, 5, 5);
+solarSystem.add(sunMesh);
+objects.push(sunMesh);
+
+const earthOrbit = new THREE.Object3D();
+earthOrbit.position.x = 10;
+solarSystem.add(earthOrbit);
+objects.push(earthOrbit);
+
+const earthMaterial = new THREE.MeshPhongMaterial({
+  color: 0x233ff,
+  emissive: 0x112244,
+});
+const earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
+earthOrbit.add(earthMesh);
+objects.push(earthMesh);
+
+const moonOrbit = new THREE.Object3D();
+moonOrbit.position.x = 2;
+earthOrbit.add(moonOrbit);
+const moonMaterial = new THREE.MeshPhongMaterial({
+  color: 0x888888,
+  emissive: 0x222222,
+});
+const moonMesh = new THREE.Mesh(sphereGeometry, moonMaterial);
+moonMesh.scale.set(0.5, 0.5, 0.5);
+moonOrbit.add(moonMesh);
+objects.push(moonMesh);
 
 //define white light
-const light = new THREE.PointLight(0xffffff, 2, 100);
+const light = new THREE.PointLight(0xffffff, 2, 25);
 light.position.set(0, 10, 10);
 scene.add(light);
 
@@ -76,7 +67,9 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.z = 20;
+camera.position.set(0, 0, 50);
+camera.up.set(0, 0, 1);
+camera.lookAt(0, 0, 0);
 scene.add(camera);
 
 const canvas = document.querySelector(".webgl");
@@ -94,19 +87,20 @@ window.addEventListener("resize", () => {
   renderer.setSize(sizes.width, sizes.height);
 });
 
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.enablePen = false;
-controls.enableZoom = false;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 5;
-
-const rotationSpeeds = [1, 3, 5, 7];
+// const controls = new OrbitControls(camera, canvas);
+// controls.enableDamping = true;
+// controls.enablePen = false;
+// controls.enableZoom = false;
+// controls.autoRotate = true;
+// controls.autoRotateSpeed = 5;
 
 // continuously update scene
 const loop = () => {
-  controls.update();
-
+  // controls.update();
+  time *= 0.001;
+  objects.forEach((obj) => {
+    obj.rotation.y = time;
+  });
   renderer.render(scene, camera);
   window.requestAnimationFrame(loop);
 };
