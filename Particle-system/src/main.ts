@@ -1,25 +1,29 @@
-// in this we use threejs for rendering 3d object and use gsap for animation
 import * as THREE from "three";
-import { gsap } from "gsap";
 import "./style.css";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
-//just assume scene as a movie-scene where you need all material, camera, lights
-//creating scene with threejs
 const scene = new THREE.Scene();
-//define shape of the module
 {
-  const geometry = new THREE.SphereGeometry(6, 64, 64);
+  const geometry = new THREE.SphereGeometry(15, 64, 64);
   const material = new THREE.PointsMaterial({
-    size: 0.2, // in world units
+    size: 0.2,
   });
   const points = new THREE.Points(geometry, material);
   scene.add(points);
 }
 {
-  const geometry = new THREE.SphereGeometry(3, 32, 32);
+  const geometry = new THREE.SphereGeometry(10, 32, 32);
   const material = new THREE.PointsMaterial({
-    size: 0.1, // in world units
+    size: 0.1,
+  });
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+}
+
+{
+  const geometry = new THREE.SphereGeometry(5, 32, 32);
+  const material = new THREE.PointsMaterial({
+    size: 0.05,
   });
   const points = new THREE.Points(geometry, material);
   scene.add(points);
@@ -30,7 +34,6 @@ const sizes = {
   height: window.innerHeight,
 };
 
-//define white light
 const light = new THREE.PointLight(0xffffff, 2, 100);
 light.position.set(0, 10, 10);
 scene.add(light);
@@ -41,16 +44,17 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.z = 20;
+camera.position.y = 20;
+camera.position.x = 2;
+camera.position.z = 4;
 scene.add(camera);
 
-const canvas = document.querySelector(".webgl");
+const canvas = document.querySelector(".webgl") as HTMLCanvasElement;
 const renderer = new THREE.WebGLRenderer({ canvas });
 renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(2);
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.render(scene, camera);
 
-// add eventlistner so when screen resize canvas automatically change its size
 window.addEventListener("resize", () => {
   sizes.width = window.innerWidth;
   sizes.height = window.innerHeight;
@@ -61,45 +65,14 @@ window.addEventListener("resize", () => {
 
 const controls = new OrbitControls(camera, canvas);
 controls.autoRotate = true;
+
+controls.enableZoom = false;
 controls.autoRotateSpeed = 5;
 
-// continuously update scene
+// Continuously update the scene
 const loop = () => {
   controls.update();
   renderer.render(scene, camera);
   window.requestAnimationFrame(loop);
 };
 loop();
-
-// gsap animation
-const tl = gsap.timeline({ defaults: { duration: 1 } });
-tl.fromTo(points.scale, { z: 0, x: 0, y: 0 }, { z: 1, x: 1, y: 1 });
-tl.fromTo(".title", { opacity: 0 }, { opacity: 1 });
-
-let mouseDown = false;
-let rgb = [];
-window.addEventListener("mousedown", () => {
-  mouseDown = true;
-});
-window.addEventListener("mouseup", () => {
-  mouseDown = false;
-});
-
-// change color animation
-window.addEventListener("mousemove", (e) => {
-  if (mouseDown) {
-    rgb = [
-      Math.round((e.pageX / sizes.width) * 255),
-      Math.round((e.pageY / sizes.height) * 255),
-      150,
-    ];
-
-    //making new color object
-    let newColor = new THREE.Color(`rgb(${rgb.join(",")})`);
-    gsap.to(points.material.color, {
-      r: newColor.r,
-      g: newColor.g,
-      b: newColor.b,
-    });
-  }
-});
